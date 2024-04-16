@@ -1,0 +1,26 @@
+
+.progress {
+  margin-bottom: 20px;
+}
+
+.status {
+  display: inline-block;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.progress-bar {
+  display: inline-block;
+  vertical-align: middle;
+  height: 20px;
+  background-color: #007bff;
+  transition: width 0.3s ease-in-out;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+  width: 0%;
+}
+
+.input-group {
+  margin-bottom: 10px;
+}
