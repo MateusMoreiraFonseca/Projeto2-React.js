@@ -1,6 +1,6 @@
-// App.js
-import React, { useState } from 'react';
-import ContadorResultados from './ContadorResultados';
+import React, { useState, useEffect } from 'react';
+import ContadorResultadosEncontrados from './ContadorResultadosEncontrados';
+import styled from 'styled-components';
 
 function App() {
   const [quantidade, setQuantidade] = useState(1);
@@ -8,9 +8,11 @@ function App() {
   const [birthdayStart, setBirthdayStart] = useState('');
   const [birthdayEnd, setBirthdayEnd] = useState('');
   const [searchSubstring, setSearchSubstring] = useState('');
-  const [progressWidth, setProgressWidth] = useState(0);
-  const [status, setStatus] = useState('');
-  const [quantidadeResultados, setQuantidadeResultados] = useState(0);
+  const [fakeData, setFakeData] = useState([]);
+  const [contadorRetorno, setContadorRetorno] = useState(0);
+  const [erro, setErro] = useState(null); 
+  const [sucesso, setSucesso] = useState(null);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +30,7 @@ function App() {
         setBirthdayEnd(value);
         break;
       case 'searchSubstring':
-        setSearchSubstring(value);
+        setSearchSubstring(value.toLowerCase());
         break;
       default:
         break;
@@ -42,84 +44,42 @@ function App() {
       return;
     }
     const apiUrl = `https://fakerapi.it/api/v1/persons?_quantity=${quantidade}&_gender=${gender}&_birthday_start=${birthdayStart}&_birthday_end=${birthdayEnd}`;
-    setStatus('Enviando requisição...');
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setStatus('Concluído (HTTP status 200)');
       localStorage.setItem('fakeData', JSON.stringify(data.data));
-      exibirDados(data.data, searchSubstring);
+      setSucesso(`Sucesso! Gerado ${data.data.length} Dados Cadastrais`); 
+      setFakeData(data.data);
+      setErro(null); 
     } catch (error) {
       console.error(error.message);
-      setStatus('Erro');
+      setErro('Falha ao executar requisição. Por favor, tente novamente mais tarde.');
     }
   };
 
-  const handleKeyUp = () => {
-    const substring = searchSubstring.trim().toLowerCase();
-    const data = JSON.parse(localStorage.getItem('fakeData'));
-    exibirDados(data, substring);
-  };
+  useEffect(() => {
+    const dadosFiltrados = exibirDados(fakeData, searchSubstring);
+    const contador = dadosFiltrados.length;
+    setContadorRetorno(contador);
+  }, [fakeData, searchSubstring]);
 
   const exibirDados = (arrayDados, substring) => {
-    const containerDados = document.getElementById('customDataContainer');
-    containerDados.innerHTML = '';
-  
-    let quantidadeEncontrada = 0;
-  
-    arrayDados.forEach((dados, index) => {
-      let hasMatch = false;
-  
-      for (const chave in dados) {
-        const valor = dados[chave];
-        if (typeof valor === 'string' && valor.toLowerCase().includes(substring)) {
-          hasMatch = true;
-          break;
-        }
-      }
-  
-      if (hasMatch) {
-        quantidadeEncontrada++;
-        const divDados = document.createElement('div');
-        divDados.classList.add('conjuntoDados');
-        divDados.innerHTML = `<h3>Conjunto de Dados ${index + 1}</h3>`;
-
-        for (const chave in dados) {
-          const valor = dados[chave];
-          if (chave === 'address') {
-            const endereco = dados[chave];
-            const endereço = `${endereco.street} ${endereco.streetName}`;
-            const endereçoParagrafo = document.createElement('p');
-            endereçoParagrafo.textContent = `Rua: ${endereço}`;
-            divDados.appendChild(endereçoParagrafo);
-
-            const cidadeParagrafo = document.createElement('p');
-            cidadeParagrafo.textContent = `Cidade: ${endereco.city}`;
-            divDados.appendChild(cidadeParagrafo);
-
-            const paísParagrafo = document.createElement('p');
-            paísParagrafo.textContent = `País: ${endereco.country}`;
-            divDados.appendChild(paísParagrafo);
-          } else if (chave !== 'street' && chave !== 'streetName') {
-            const paragrafo = document.createElement('p');
-            paragrafo.textContent = `${chave}: ${valor}`;
-            divDados.appendChild(paragrafo);
-          }
-        }
-        setQuantidadeResultados(quantidadeEncontrada);
-
-
-        containerDados.appendChild(divDados);
-      }
-    });
+    return substring
+      ? arrayDados.filter((dados) =>
+        Object.values(dados).some(
+          (valor) =>
+            typeof valor === 'string' &&
+            valor.toLowerCase().includes(substring)
+        )
+      )
+      : arrayDados;
   };
 
-
   return (
-    <div>
+    <div className='inputs'>
       <h1>Gerador de Dados Customizado Faker</h1>
       <form onSubmit={handleSubmit}>
         <div className="input-group">
@@ -146,27 +106,60 @@ function App() {
           <input type="date" id="birthdayEnd" name="birthdayEnd" value={birthdayEnd} onChange={handleInputChange} />
         </div>
 
-        <div className="progress">
-          <div className="status">Status:</div>
-          <div className="progress-bar" style={{ width: `${progressWidth}%` }} role="progressbar" aria-valuenow={progressWidth} aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        <button id="btnObterDados" type="submit">Obter Dados Falsos Personalizados</button>
-
         <div className="input-group">
           <label htmlFor="searchSubstring">Buscar por Substring:</label>
-          <input type="text" id="searchSubstring" name="searchSubstring" value={searchSubstring} onChange={handleInputChange} onKeyUp={handleKeyUp} placeholder="Substring" />
+          <input type="text" id="searchSubstring" name="searchSubstring" value={searchSubstring} onChange={handleInputChange} placeholder="Substring" />
         </div>
 
-
-        <div className="Contador">
-
-          <ContadorResultados quantidadeResultados={quantidadeResultados} />
-        </div>
+        <Botao type="submit">Obter Dados Falsos Personalizados</Botao>
       </form>
 
-      <div id="customDataContainer"></div>
+      {erro && <ErroMessage>{erro}</ErroMessage>}
+      {sucesso && <SuccessMessage>{sucesso}</SuccessMessage>}
+
+      <div className='Resultados'>
+        {exibirDados(fakeData, searchSubstring).map((dados, index) => (
+          <div key={index} className="conjuntoDados">
+            <h3>Conjunto de Dados {index + 1}</h3>
+            {Object.entries(dados).map(([chave, valor]) => (
+              <p key={chave}>{chave === 'address' ? `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` : `${chave}: ${valor}`}</p>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {searchSubstring && contadorRetorno >= 0 && (
+        <div className="Contador">
+          <ContadorResultadosEncontrados quantidadeResultados={contadorRetorno} />
+        </div>
+      )}
     </div>
   );
 }
+
+const Botao = styled.button`
+  background-color: blue;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: darkblue;
+  }
+`;
+
+const ErroMessage = styled.div`
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+`;
+const SuccessMessage = styled.div`
+  color: green;
+  font-size: 14px;
+  margin-top: 10px;
+`;
 
 export default App;
