@@ -10,8 +10,11 @@ function App() {
   const [searchSubstring, setSearchSubstring] = useState('');
   const [fakeData, setFakeData] = useState([]);
   const [contadorRetorno, setContadorRetorno] = useState(0);
-  const [erro, setErro] = useState(null); 
+  const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
 
 
   const handleInputChange = (e) => {
@@ -51,9 +54,9 @@ function App() {
       }
       const data = await response.json();
       localStorage.setItem('fakeData', JSON.stringify(data.data));
-      setSucesso(`Sucesso! Gerado ${data.data.length} Dados Cadastrais`); 
+      setSucesso(`Sucesso! Gerado ${data.data.length} Dados Cadastrais`);
       setFakeData(data.data);
-      setErro(null); 
+      setErro(null);
     } catch (error) {
       console.error(error.message);
       setErro('Falha ao executar requisição. Por favor, tente novamente mais tarde.');
@@ -78,10 +81,14 @@ function App() {
       : arrayDados;
   };
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = exibirDados(fakeData, searchSubstring).slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <div className='inputs'>
-      <h1>Gerador de Dados Customizado </h1>
-      <h2>Faker</h2>
+      <h2>Gerador de Dados Customizado </h2>
+      <h1>Faker 1.0</h1>
       <form onSubmit={handleSubmit}>
         <div className="input-group">
           <label htmlFor="quantidade">Quantidade de registros a ser gerado:</label>
@@ -119,22 +126,31 @@ function App() {
       {sucesso && <SuccessMessage>{sucesso}</SuccessMessage>}
 
       <div className='Resultados'>
-        {exibirDados(fakeData, searchSubstring).map((dados, index) => (
-          <div key={index} className="conjuntoDados">
-            <h3>Conjunto de Dados {index + 1}</h3>
-            {Object.entries(dados).map(([chave, valor]) => (
-              <p key={chave}>{chave === 'address' ? `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` : `${chave}: ${valor}`}</p>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {searchSubstring && contadorRetorno >= 0 && (
-        <div className="Contador">
-          <ContadorResultadosEncontrados quantidadeResultados={contadorRetorno} />
-        </div>
-      )}
+  {currentItems.map((dados, index) => (
+    <div key={index} className="conjuntoDados">
+      <h3>Conjunto de Dados {index + 1}</h3>
+      {Object.entries(dados).map(([chave, valor]) => (
+        <p key={chave}>{chave === 'address' ? `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` : `${chave}: ${valor}`}</p>
+      ))}
     </div>
+  ))}
+</div>
+
+{searchSubstring && contadorRetorno >= 0 && (
+  <div className="Contador">
+    <ContadorResultadosEncontrados quantidadeResultados={contadorRetorno} />
+  </div>
+)}
+
+<Pagination>
+  <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>Anterior</button>
+  <span>Página {currentPage}</span>
+  <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentItems.length < itemsPerPage || (currentPage * itemsPerPage >= contadorRetorno)}>Próxima</button>
+  <span>Total de Páginas: {Math.ceil(contadorRetorno / itemsPerPage)}</span>
+</Pagination>
+
+    </div>
+    
   );
 }
 
@@ -162,5 +178,21 @@ const SuccessMessage = styled.div`
   font-size: 14px;
   margin-top: 10px;
 `;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  button {
+    margin: 0 5px;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+`;
+
 
 export default App;
