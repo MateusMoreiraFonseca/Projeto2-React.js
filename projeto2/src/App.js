@@ -80,7 +80,8 @@ function App() {
 
   return (
     <div className='inputs'>
-      <h1>Gerador de Dados Customizado Faker</h1>
+      <h1>Gerador de Dados Customizado </h1>
+      <h2>Faker</h2>
       <form onSubmit={handleSubmit}>
         <div className="input-group">
           <label htmlFor="quantidade">Quantidade de registros a ser gerado:</label>
