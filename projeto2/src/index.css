@@ -22,5 +22,7 @@
 }
 
 .input-group {
-  margin-bottom: 10px;
+  max-height: 200px; 
+  overflow-y: auto; 
 }
+
