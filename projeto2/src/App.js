@@ -3,6 +3,7 @@ import ContadorResultadosEncontrados from './ContadorResultadosEncontrados';
 import styled from 'styled-components';
 import { DataContext } from './DataContext';
 import ErroComponent from './ErroComponent';
+import moonImage from './bluemoon.png';
 
 function App() {
   const { fakeData, setFakeData, contadorRetorno, setContadorRetorno } = useContext(DataContext);
@@ -18,6 +19,8 @@ function App() {
   const resultadosRef = useRef(null);
   const [erroRequisicao, setErroRequisicao] = useState(null);
   const [erroBusca, setErroBusca] = useState(null);
+  const [incluirImagem, setIncluirImagem] = useState(true);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -55,8 +58,11 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCurrentPage(1);
+    setErroBusca(null)
+    setErroRequisicao(null);
+    setSucesso(null)
     if (quantidade <= 0) {
-      setErroRequisicao('Por favor, insira uma quantidade válida a ser gerada.');
+      setErroRequisicao('Por favor, insira uma quantidade válida a ser gerado.');
       return;
     }
     const apiUrl = `https://fakerapi.it/api/v1/persons?_quantity=${quantidade}&_gender=${gender}&_birthday_start=${birthdayStart}&_birthday_end=${birthdayEnd}`;
@@ -66,6 +72,31 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+  
+      if (!data || !data.data) {
+        setErroRequisicao('Dados inválidos retornados pela API.');
+        return;
+      }
+  
+      for (const pessoa of data.data) {
+        let imageUrl = '';
+        if (pessoa.gender === 'male') {
+          const responseDog = await fetch('https://dog.ceo/api/breeds/image/random');
+          const responseDataDog = await responseDog.json();
+          imageUrl = responseDataDog.message;
+        } else {
+          const responseCat = await fetch('https://api.thecatapi.com/v1/images/search?limit=1');
+          const responseDataCat = await responseCat.json();
+          imageUrl = responseDataCat[0].url;
+        }
+        if (!pessoa.Foto) {
+          pessoa.Foto = imageUrl;
+
+          // Estou tendo problema com a atribuicao
+        }
+        delete pessoa.image;
+      }
+  
       localStorage.setItem('fakeData', JSON.stringify(data.data));
       setSucesso(`Sucesso! Gerado ${data.data.length} Dados Cadastrais`);
       setFakeData(data.data);
@@ -73,8 +104,11 @@ function App() {
     } catch (error) {
       console.error(error.message);
       setErroRequisicao('Falha ao executar requisição. Por favor, tente novamente mais tarde.');
+      setSucesso(null);
+      setErroBusca(null);
     }
   };
+  
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -99,7 +133,6 @@ function App() {
     }
   }, [fakeData, buscarSubstring, setContadorRetorno]);
 
-
   const exibirDados = (arrayDados, substring) => {
     return substring
       ? arrayDados.filter((dados) =>
@@ -120,129 +153,151 @@ function App() {
 
   return (
     <Tudo className='aplicacao'>
-      <Titulo>
-        <h1>Gerador de Dados Pessoais Falsos</h1>
-        <h1>Faker 1.0</h1>
-      </Titulo>
-      <Corpo>
-        <Inputs className='inputs'>
-          <Form onSubmit={handleSubmit}>
+      <BlocoExterno>
+        <Titulo>
+          <h2>Gerador de Dados Pessoais Falsos</h2>
+          <MoonImage src={moonImage} alt="Blue Moon" />
+          <h2>Faker 1.0</h2>
+        </Titulo>
+        <BlocoInterno>
+
+          <Inputs className='inputs'>
+            <Form onSubmit={handleSubmit}>
+              <div className='input-group'>
+                <label htmlFor='quantidade'>Quantidade de registros a ser gerado:</label>
+                <input
+                  type='number'
+                  id='quantidade'
+                  name='quantidade'
+                  value={quantidade}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className='input-group'>
+                <label htmlFor='gender'>Gênero:</label>
+                <select id='gender' name='gender' value={gender} onChange={handleInputChange}>
+                  <option value=''>Qualquer</option>
+                  <option value='male'>Masculino</option>
+                  <option value='female'>Feminino</option>
+                </select>
+              </div>
+              <Botao type='submit'>Obter Dados Falsos Personalizados</Botao>
+            </Form>
+
+            {erroRequisicao && <ErroComponent erro={erroRequisicao} />}
+            {sucesso && <SuccessMessage>{sucesso}</SuccessMessage>}
+
+          </Inputs>
+
+          <BuscaSubstring>
             <div className='input-group'>
-              <label htmlFor='quantidade'>Quantidade de registros a ser gerado:</label>
+              <label htmlFor='searchSubstring'>Buscar por Substring:</label>
               <input
-                type='number'
-                id='quantidade'
-                name='quantidade'
-                value={quantidade}
+                type='text'
+                id='searchSubstring'
+                name='searchSubstring'
+                value={buscarSubstring}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder='Substring'
               />
             </div>
-            <div className='input-group'>
-              <label htmlFor='gender'>Gênero:</label>
-              <select id='gender' name='gender' value={gender} onChange={handleInputChange}>
-                <option value=''>Qualquer</option>
-                <option value='male'>Masculino</option>
-                <option value='female'>Feminino</option>
-              </select>
-            </div>
-            <Botao type='submit'>Obter Dados Falsos Personalizados</Botao>
-          </Form>
-        </Inputs>
-        {erroRequisicao && <ErroComponent erro={erroRequisicao} />}
-        {sucesso && <SuccessMessage>{sucesso}</SuccessMessage>}
+          </BuscaSubstring>
 
-      </Corpo>
+          {erroBusca && <ErroComponent erro={erroBusca} />}
 
-      <BuscaSubstring>
-        <div className='input-group'>
-          <label htmlFor='searchSubstring'>Buscar por Substring:</label>
-          <input
-            type='text'
-            id='searchSubstring'
-            name='searchSubstring'
-            value={buscarSubstring}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder='Substring'
-          />
-        </div>
-      </BuscaSubstring>
+          {buscarSubstring && contadorRetorno >= 0 && (
+            <ContadorResultadosEncontrados quantidadeResultados={contadorRetorno} />
+          )}
+          <Resultados ref={resultadosRef}>
+            {itemAtual.map((dados, index) => (
+              <div key={index} className='conjuntoDados'>
+                <hr />
+                <table>
+                  <tbody>
+                    {Object.entries(dados).map(([chave, valor]) => (
+                      <tr key={chave}>
+                        <td>
+                          {chave === 'address' ?
+                            'Endereço' :
+                            chave === 'id' ? 'Id' :
+                              chave === 'firstname' ? 'Nome' :
+                                chave === 'lastname' ? 'Sobrenome' :
+                                  chave === 'email' ? 'Email' :
+                                    chave === 'phone' ? 'Telefone' :
+                                      chave === 'birthday' ? 'Data de Nascimento' :
+                                        chave === 'gender' ? 'Gênero' :
+                                          chave.charAt(0).toUpperCase() + chave.slice(1)
+                          }
+                        </td>
+                        <td>
+                          {chave === 'Foto' && valor && (
+                            <img src={valor} alt={`Foto ${index}`} style={{ maxWidth: '100px' }} />
+                          )}
+                          {chave === 'address' ?
+                            `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` :
+                            valor
+                          }
+                        </td>
 
-      {erroBusca && <ErroComponent erro={erroBusca} />}
 
-      {buscarSubstring && contadorRetorno >= 0 && (
 
-        <ContadorResultadosEncontrados quantidadeResultados={contadorRetorno} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <hr />
+              </div>
+            ))}
 
-      )}
+          </Resultados>
 
-      <Resultados ref={resultadosRef}>
-        {itemAtual.map((dados, index) => (
-          <div key={index} className='conjuntoDados'>
-            <hr /> {/* Linha de separação */}
-            <table>
-              <tbody>
-                {Object.entries(dados).map(([chave, valor]) => (
-                  <tr key={chave}>
-                    <td>
-                      {chave === 'address' ?
-                        'Endereço' :
-                        chave === 'id' ? 'Id' :
-                          chave === 'firstname' ? 'Nome' :
-                            chave === 'lastname' ? 'Sobrenome' :
-                              chave === 'email' ? 'Email' :
-                                chave === 'phone' ? 'Telefone' :
-                                  chave === 'birthday' ? 'Data de Nascimento' :
-                                    chave === 'gender' ? 'Gênero' :
-                                      chave.charAt(0).toUpperCase() + chave.slice(1)
-                      }
-                    </td>
-                    <td>
-                      {chave === 'address' ?
-                        `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}`
-                        : valor}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <hr /> {/* Linha de separação */}
-          </div>
-        ))}
-      </Resultados>
 
+          <Pagination>
+            <button onClick={() => setCurrentPage(paginalAtual - 1)} disabled={paginalAtual === 1}>
+              Anterior
+            </button>
+            <span>Página {paginalAtual}</span>
+            <button
+              onClick={() => setCurrentPage(paginalAtual + 1)}
+              disabled={itemAtual.length < itensNaPagina || paginalAtual * itensNaPagina >= contadorRetorno}
+            >
+              Próxima
+            </button>
+            <span>Total de Páginas: {Math.ceil(contadorRetorno / itensNaPagina)}</span>
+          </Pagination>
+        </BlocoInterno>
+      </BlocoExterno>
       <Footer>
-        <Pagination>
-          <button onClick={() => setCurrentPage(paginalAtual - 1)} disabled={paginalAtual === 1}>
-            Anterior
-          </button>
-          <span>Página {paginalAtual}</span>
-          <button
-            onClick={() => setCurrentPage(paginalAtual + 1)}
-            disabled={itemAtual.length < itensNaPagina || paginalAtual * itensNaPagina >= contadorRetorno}
-          >
-            Próxima
-          </button>
-          <span>Total de Páginas: {Math.ceil(contadorRetorno / itensNaPagina)}</span>
-        </Pagination>
-
         <Assinatura>
           Mateus Moreira Fonseca © Projeto2 da Disciplina Full Stack-UTFPR
         </Assinatura>
-
       </Footer>
-
     </Tudo>
   );
 }
 
-const Tudo = styled.h1`
-  background-color: #00b8ab;
+const Tudo = styled.div`
+  background-color: #00BFF3; 
+`;
+const BlocoExterno = styled.div`
+  background-color: #00BFF3;
+  border: 2px solid #000;
+  padding: 20px;
+  
+  @media screen and (max-width: 768px) {
+    font-size: 18px;
+    padding: 10px;
+  }
 `;
 
-const Titulo = styled.h1`
-  background-color: #00b8ab;
-  font-size: 24px;
+const BlocoInterno = styled.div`
+  border: 2px solid #000; 
+`;
+
+const Titulo = styled.div`
+  background-color: #00BFF3;
+  font-size: 20px;
   margin-top: 10px;
   align-items: center;
   display: flex;
@@ -250,12 +305,10 @@ const Titulo = styled.h1`
   align-items: center;
 `;
 
-const Corpo = styled.div`
-  display: flex;  
-  align-items: center;
-  background-color: #00b8ab;
-  display: grid;
-  justify-content: center;
+const MoonImage = styled.img`
+  width: 100px;
+  height: auto;
+  margin-bottom: 10px;
 `;
 
 const Resultados = styled.div`
@@ -263,17 +316,17 @@ const Resultados = styled.div`
   max-width: 400px;
   overflow-y: auto;
   margin: 0 auto;
-  background-color: #f2f2f2;
+  background-color: #00BFF3;
   font-size: 16px;
   margin-top: 10px;
-  margin-botton: 10px;
-
+  margin-bottom: 10px;
 `;
 
-
-const Footer = styled.h1`
-  background-color: #00b8ab;  
+const Footer = styled.footer`
+  background-color: #00BFF3;  
   margin: 10px auto;
+  text-align: center;
+  padding: 10px;
 `;
 
 const Assinatura = styled.footer`
@@ -283,7 +336,6 @@ const Assinatura = styled.footer`
   font-size: 12px;
   text-align: center;
 `;
-
 
 const BuscaSubstring = styled.div`
   margin-top: 15px;
@@ -297,6 +349,10 @@ const BuscaSubstring = styled.div`
 const Inputs = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+  background-color: #00BFF3;
+  display: grid;
+  justify-content: center;
 `;
 
 const Form = styled.form`
@@ -330,24 +386,17 @@ const SuccessMessage = styled.div`
 
 const Pagination = styled.div`
   font-size: 14px;
-  
   display: flex;
   justify-content: center;
   align-items: center;
-
   button {
     margin: 0 5px;
     cursor: pointer;
   }
-
   button:disabled {
     cursor: not-allowed;
   }
   margin-bottom: 10px;
 `;
-
-
-
-
 
 export default App;
