@@ -19,16 +19,17 @@ function App() {
   const resultadosRef = useRef(null);
   const [erroRequisicao, setErroRequisicao] = useState(null);
   const [erroBusca, setErroBusca] = useState(null);
-  const [incluirImagem, setIncluirImagem] = useState(true);
+
 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let valorValidado = value;
 
-    if (name === 'quantidade' && isNaN(value) || parseInt(value) < 0) {
+    if ((name === 'quantidade' && (isNaN(value) || parseInt(value) < 0))) {
       valorValidado = 0;
     }
+
 
     switch (name) {
       case 'quantidade':
@@ -50,17 +51,20 @@ function App() {
         break;
     }
 
-    setErroBusca(null)
+    limparMensagens();
+  };
+
+  const limparMensagens = () => {
+    setErroBusca(null);
     setErroRequisicao(null);
-    setSucesso(null)
+    setSucesso(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCurrentPage(1);
-    setErroBusca(null)
-    setErroRequisicao(null);
-    setSucesso(null)
+    limparMensagens();
+    setFakeData([]);
     if (quantidade <= 0) {
       setErroRequisicao('Por favor, insira uma quantidade válida a ser gerado.');
       return;
@@ -72,12 +76,12 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-  
+
       if (!data || !data.data) {
         setErroRequisicao('Dados inválidos retornados pela API.');
         return;
       }
-  
+
       for (const pessoa of data.data) {
         let imageUrl = '';
         if (pessoa.gender === 'male') {
@@ -96,7 +100,7 @@ function App() {
         }
         delete pessoa.image;
       }
-  
+
       localStorage.setItem('fakeData', JSON.stringify(data.data));
       setSucesso(`Sucesso! Gerado ${data.data.length} Dados Cadastrais`);
       setFakeData(data.data);
@@ -108,7 +112,7 @@ function App() {
       setErroBusca(null);
     }
   };
-  
+
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -119,6 +123,12 @@ function App() {
       }
     }
   };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    limparMensagens();
+  };
+
 
   useEffect(() => {
     const dadosFiltrados = exibirDados(fakeData, buscarSubstring);
@@ -132,6 +142,10 @@ function App() {
       resultadosRef.current.style.borderStyle = temResultados ? 'solid' : 'none';
     }
   }, [fakeData, buscarSubstring, setContadorRetorno]);
+
+  useEffect(() => {
+    limparMensagens();
+  }, [quantidade, gender, birthdayStart, birthdayEnd, buscarSubstring]);
 
   const exibirDados = (arrayDados, substring) => {
     return substring
@@ -157,7 +171,7 @@ function App() {
         <Titulo>
           <h2>Gerador de Dados Pessoais Falsos</h2>
           <MoonImage src={moonImage} alt="Blue Moon" />
-          <h2>Faker 1.0</h2>
+          <h2>BlueMoon 1.0</h2>
         </Titulo>
         <BlocoInterno>
 
@@ -253,19 +267,19 @@ function App() {
           </Resultados>
 
 
-          <Pagination>
-            <button onClick={() => setCurrentPage(paginalAtual - 1)} disabled={paginalAtual === 1}>
+          <Paginacao>
+            <button onClick={() => handlePageChange(paginalAtual - 1)} disabled={paginalAtual === 1}>
               Anterior
             </button>
             <span>Página {paginalAtual}</span>
             <button
-              onClick={() => setCurrentPage(paginalAtual + 1)}
+              onClick={() => handlePageChange(paginalAtual + 1)}
               disabled={itemAtual.length < itensNaPagina || paginalAtual * itensNaPagina >= contadorRetorno}
             >
               Próxima
             </button>
             <span>Total de Páginas: {Math.ceil(contadorRetorno / itensNaPagina)}</span>
-          </Pagination>
+          </Paginacao>
         </BlocoInterno>
       </BlocoExterno>
       <Footer>
@@ -278,17 +292,29 @@ function App() {
 }
 
 const Tudo = styled.div`
-  background-color: #00BFF3; 
+  background-color: #001f3f; 
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  
 `;
+
 const BlocoExterno = styled.div`
   background-color: #00BFF3;
   border: 2px solid #000;
   padding: 20px;
-  
-  @media screen and (max-width: 768px) {
-    font-size: 18px;
-    padding: 10px;
-  }
+  width: 50%;
+  margin: auto;
+  margin-bottom: 2.5rem; /* Altura do footer */
+`;
+
+const Footer = styled.footer`
+  background-color: #00BFF3;  
+  width: 100%;
+  height: 2.5rem;   
+  position: absolute;
+  bottom: 0;
 `;
 
 const BlocoInterno = styled.div`
@@ -303,6 +329,7 @@ const Titulo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  color: #001f3f ;
 `;
 
 const MoonImage = styled.img`
@@ -322,12 +349,6 @@ const Resultados = styled.div`
   margin-bottom: 10px;
 `;
 
-const Footer = styled.footer`
-  background-color: #00BFF3;  
-  margin: 10px auto;
-  text-align: center;
-  padding: 10px;
-`;
 
 const Assinatura = styled.footer`
   background-color: #101e36;
@@ -384,7 +405,7 @@ const SuccessMessage = styled.div`
   text-align: center;
 `;
 
-const Pagination = styled.div`
+const Paginacao = styled.div`
   font-size: 14px;
   display: flex;
   justify-content: center;
