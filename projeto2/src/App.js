@@ -225,15 +225,15 @@ function App() {
           )}
           <Resultados ref={resultadosRef}>
             {itemAtual.map((dados, index) => (
-              <div key={index} className='conjuntoDados'>
+
+              <ConjuntoDados key={index} className='conjuntoDados'>
                 <hr />
                 <table>
                   <tbody>
                     {Object.entries(dados).map(([chave, valor]) => (
                       <tr key={chave}>
                         <td>
-                          {chave === 'address' ?
-                            'Endereço' :
+                          {chave === 'address' ? 'Endereço' :
                             chave === 'id' ? 'Id' :
                               chave === 'firstname' ? 'Nome' :
                                 chave === 'lastname' ? 'Sobrenome' :
@@ -241,8 +241,7 @@ function App() {
                                     chave === 'phone' ? 'Telefone' :
                                       chave === 'birthday' ? 'Data de Nascimento' :
                                         chave === 'gender' ? 'Gênero' :
-                                          chave.charAt(0).toUpperCase() + chave.slice(1)
-                          }
+                                          chave.charAt(0).toUpperCase() + chave.slice(1)}
                         </td>
                         <td>
                           {chave.trim() === 'Foto' ? (
@@ -257,11 +256,10 @@ function App() {
                     ))}
                   </tbody>
                 </table>
-                <hr />
-              </div>
+              </ConjuntoDados>
             ))}
-
           </Resultados>
+
 
 
           <Paginacao>
@@ -288,13 +286,24 @@ function App() {
   );
 }
 
-const Tudo = styled.div`
+
+const ConjuntoDados = styled.div`
   background-color: #001f3f; 
-  min-height: 100vh;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  
+  margin: 0px;
+  padding: 0; 
+  `;
+
+const Tudo = styled.div`
+background-color: #001f3f; 
+min-height: 98vh;
+position: relative;
+display: flex;
+flex-direction: column;
+word-break: break-word;
+text-align: center;
+align-content: start;
+border-radius: 10px;
+
 `;
 
 const BlocoExterno = styled.div`
@@ -302,9 +311,16 @@ const BlocoExterno = styled.div`
   border: 2px solid #000;
   padding: 20px;
   width: 50%;
+  height: 80vh;
+  self-align:top;
   margin: auto;
-  margin-bottom: 2.5rem; /* Altura do footer */
-`;
+  margin-bottom: 2.5rem;
+  border-radius: 10px;
+  position: static;
+  top: 50%; 
+  left: 50%;
+  align-content: start;
+  `;
 
 const Footer = styled.footer`
   background-color: #00BFF3;  
@@ -316,17 +332,26 @@ const Footer = styled.footer`
 
 const BlocoInterno = styled.div`
   border: 2px solid #000; 
+  border-top-left-radius: 10px; 
+  border-bottom-left-radius: 10px;
+  overflow: auto; 
+  background-color: #00BFF3;  
+  height: 50vh;
+  align-content: center;
+  
 `;
 
 const Titulo = styled.div`
   background-color: #00BFF3;
-  font-size: 20px;
+  font-size: 15px;
   margin-top: 10px;
   align-items: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   color: #001f3f ;
+  
+  
 `;
 
 const MoonImage = styled.img`
@@ -342,8 +367,27 @@ const Resultados = styled.div`
   margin: 0 auto;
   background-color: #00BFF3;
   font-size: 16px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 0px;
+  margin-bottom: 15px;
+  border-collapse: collapse;
+  border-spacing: 0;
+  
+  
+  tr:nth-child(even) {
+    background-color: #f2f2f2; 
+  }
+  tr:nth-child(odd) {
+    background-color: #ffffff; 
+  }
+  table {
+    width: 100%;
+  }
+  td {
+    width: 10%; 
+    text-align: left; 
+  }
+  tr:hover {
+    background-color: #ddd; 
 `;
 
 
@@ -353,6 +397,8 @@ const Assinatura = styled.footer`
   padding: 10px;
   font-size: 12px;
   text-align: center;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px; 
 `;
 
 const BuscaSubstring = styled.div`
@@ -361,7 +407,7 @@ const BuscaSubstring = styled.div`
   flex-direction: column;
   align-items: center;
   font-size: 22px;
-  margin-bottom: px;
+  margin-bottom: 15px;
 `;
 
 const Inputs = styled.div`
@@ -377,6 +423,7 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   font-size: 20px;
+  border-radius: 10px;
 `;
 
 const Botao = styled.button`
