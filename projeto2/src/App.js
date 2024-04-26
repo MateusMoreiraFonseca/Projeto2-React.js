@@ -96,7 +96,7 @@ function App() {
         if (!pessoa.Foto) {
           pessoa.Foto = imageUrl;
 
-          // Estou tendo problema com a atribuicao
+          // Estou tendo problema com a atribuicao, alem de exibir a imagem no html , tbm exibi o link
         }
         delete pessoa.image;
       }
@@ -245,17 +245,14 @@ function App() {
                           }
                         </td>
                         <td>
-                          {chave === 'Foto' && valor && (
+                          {chave.trim() === 'Foto' ? (
                             <img src={valor} alt={`Foto ${index}`} style={{ maxWidth: '100px' }} />
+                          ) : (
+                            chave === 'address' ?
+                              `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` :
+                              valor
                           )}
-                          {chave === 'address' ?
-                            `Rua: ${valor.street} ${valor.streetName}, Cidade: ${valor.city}, País: ${valor.country}` :
-                            valor
-                          }
                         </td>
-
-
-
                       </tr>
                     ))}
                   </tbody>
