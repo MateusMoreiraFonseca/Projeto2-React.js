@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { DataContext } from './DataContext';
 import ErroComponent from './ErroComponent';
 import moonImage from './bluemoon.png';
+import useInput from './useInput';
+
 
 function App() {
   const { fakeData, setFakeData, contadorRetorno, setContadorRetorno } = useContext(DataContext);
@@ -164,8 +166,9 @@ function App() {
     indexOfFirstItem - 1,
     indexOfLastItem
   );
-
+  const quantidadeInput = useInput(1);
   return (
+    
     <Tudo className='aplicacao'>
       <BlocoExterno>
         <Titulo>
@@ -183,8 +186,8 @@ function App() {
                   type='number'
                   id='quantidade'
                   name='quantidade'
-                  value={quantidade}
-                  onChange={handleInputChange}
+                  value={quantidadeInput.value}
+                  onChange={quantidadeInput.onChange}
                 />
               </div>
               <div className='input-group'>
